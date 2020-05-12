@@ -8,11 +8,17 @@ import semmle.code.java.dataflow.FlowSources
 
 class ConstraintValidatorisValidMethod extends Method{
 	ConstraintValidatorisValidMethod(){
-		exists(Method base, Method m2|
+		exists(Method base|
 		this = base
 		and base.hasName("isValid")
 		and base.getDeclaringType().getASourceSupertype*().hasName("ConstraintValidator")
 		)
+	}
+}
+
+class ConstraintValidatorContextBuildTemplate extends Method{
+	ConstraintValidatorContextBuildTemplate(){
+		this.hasName("buildConstraintViolationWithTemplate") and this.getDeclaringType().hasName("ConstraintValidatorContext")
 	}
 }
 
@@ -82,14 +88,13 @@ class MyTaintTrackingConfig extends TaintTracking::Configuration {
 	MyTaintTrackingConfig() { this = "MyTaintTrackingConfig" }
 	override predicate isSource(DataFlow::Node source) { 
 		exists(ConstraintValidatorisValidMethod im|
-		source.asParameter() = im.getParameter(0)
+			source.asParameter() = im.getParameter(0)
 		)
 	}
 
 	override predicate isSink(DataFlow::Node sink) { 
 		exists(MethodAccess ma|
-		ma.getMethod().hasName("buildConstraintViolationWithTemplate")
-		and ma.getMethod().getDeclaringType().hasName("ConstraintValidatorContext")
+		ma.getMethod() instanceof ConstraintValidatorContextBuildTemplate
 		and ma.getAnArgument() = sink.asExpr()
 		)
 	}
