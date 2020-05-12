@@ -319,3 +319,6 @@ curl -i -s -k  -X 'POST' \
 ```
 
 QL: https://github.com/testanull/GHCTF-4-writeup/blob/master/PoC.ql
+
+Thanks @pwntester and Github Security Lab for great challenge and nice tutorial!
+
