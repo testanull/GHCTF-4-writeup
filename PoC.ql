@@ -83,6 +83,47 @@ class HashSet extends TaintTracking::AdditionalTaintStep{
 	}
 }
 
+class ExceptionGetMessage extends TaintTracking::AdditionalTaintStep{
+	override predicate step(DataFlow::Node node1, DataFlow::Node node2){
+		exists(MethodAccess ma, Method m, TryStmt trystmt|
+			ma.getMethod() = m
+			and m.hasName("getMessage")
+			and m.hasNoParameters()
+			and m.getDeclaringType().getASourceSupertype*().hasQualifiedName("java.lang", "Throwable")
+			and ma.getEnclosingStmt().getParent*() = trystmt.getACatchClause()
+			and ma.getQualifier() = node1.asExpr()
+			and ma = node2.asExpr()
+		)
+	}
+}
+
+class ExceptionToCatchClause extends TaintTracking::AdditionalTaintStep{
+	override predicate step(DataFlow::Node node1, DataFlow::Node node2){
+		exists(MethodAccess ma, Method m, TryStmt trystmt|
+		trystmt.getACatchClause().getVariable() = node1.asExpr()
+		and ma.getMethod() = m
+		and ma.getEnclosingStmt().getParent*() = trystmt.getACatchClause()
+		and m.hasName("getMessage")
+		and ma.getQualifier() = node2.asExpr()
+		)
+	}
+}
+
+class TryCatch extends TaintTracking::AdditionalTaintStep{
+	override predicate step(DataFlow::Node node1, DataFlow::Node node2){
+		exists(Call call, TryStmt trystmt|
+			(
+				call instanceof ClassInstanceExpr
+				or call instanceof MethodAccess
+			) and (
+				call.getEnclosingStmt().getParent*() = trystmt.getBlock()
+				and trystmt.getACatchClause().getVariable() = node2.asExpr()
+				and call.getAnArgument() = node1.asExpr()
+			)
+		)
+	}
+}
+
 
 class MyTaintTrackingConfig extends TaintTracking::Configuration {
 	MyTaintTrackingConfig() { this = "MyTaintTrackingConfig" }
