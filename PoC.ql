@@ -22,12 +22,12 @@ class ConstraintValidatorContextBuildTemplate extends Method{
 	}
 }
 
-class GetSoftOrHardContraints extends TaintTracking::AdditionalTaintStep{
+
+class GetterTainted extends TaintTracking::AdditionalTaintStep{
 	override predicate step(DataFlow::Node node1, DataFlow::Node node2){
-		exists(MethodAccess ma, Method m|
+		exists(MethodAccess ma, Method m, Field f|
 			ma.getMethod() = m
-			and (m.hasName("getSoftConstraints") or m.hasName("getHardConstraints"))
-			and m.getDeclaringType().hasQualifiedName("com.netflix.titus.api.jobmanager.model.job", "Container")
+			and m.(GetterMethod).getField() = f
 			and ma.getQualifier() = node1.asExpr()
 			and ma = node2.asExpr()
 		)
