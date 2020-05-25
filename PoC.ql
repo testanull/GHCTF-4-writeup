@@ -9,12 +9,13 @@ import semmle.code.java.dataflow.FlowSources
 class ConstraintValidatorisValidMethod extends Method{
 	ConstraintValidatorisValidMethod(){
 		exists(Method base|
-		this = base
-		and base.hasName("isValid")
-		and base.getDeclaringType().getASourceSupertype*().hasName("ConstraintValidator")
+		base.hasName("isValid")
+		and base.getDeclaringType().getASourceSupertype().hasQualifiedName("javax.validation", "ConstraintValidator")
+		and this.overrides+(base)
 		)
 	}
 }
+
 
 class ConstraintValidatorContextBuildTemplateMethod extends Method{
 	ConstraintValidatorContextBuildTemplateMethod(){
@@ -119,6 +120,18 @@ class ExceptionToCatchClause extends TaintTracking::AdditionalTaintStep{
 		and ma.getEnclosingStmt().getParent*() = trystmt.getACatchClause()
 		and m.hasName("getMessage")
 		and ma.getQualifier() = node2.asExpr()
+		)
+	}
+}
+
+class CharSequenceToString extends TaintTracking::AdditionalTaintStep{
+	override predicate step(DataFlow::Node node1, DataFlow::Node node2){
+		exists(MethodAccess ma, Method m|
+			m.hasName("toString")
+			and m.getDeclaringType().hasName("CharSequence")
+			and ma.getMethod() = m
+			and ma.getQualifier() = node1.asExpr()
+			and ma = node2.asExpr()
 		)
 	}
 }
